@@ -1,0 +1,315 @@
+<html>
+
+<head>
+<title>Jaydip</title>
+<title>Title</title>
+
+</head>
+
+<body>
+<p>#Project #2: Unemployment and Correlations</p>
+<p>#Group #7</p>
+<p>#Jaydip Patel, Vincent Chang, Nicole Haberer, Ivy Wang, & Griffin Parr</p>
+<p>
+This project asks for you to collect and work with data in a realistic setting. For this assignment,
+1. Write a brief and insightful typed report on your findings using the data.
+2. Asanappendix to your report,include the relevant R code and output (scriptfiles,logfiles,etc.)
+you used to perform the calculations you discuss in the report.
+3. In the main text of your report, you should have typed tables and figures that help you summarize nicely the relevant computations and graphics from this output (not all output is relevant to a coherent discussion).
+</p>
+<p>
+John Taylor’s Other Scatter Plot:
+</p>
+<p>
+Gist: the purpose of the project to work on statistic concepts: Sampling distribution, Inference concepts, r practice etc.
+</p>
+<p>One >>>>> </p>
+<p>
+Construct the data set that generates this scatter plot. The source is FRED, 4 a great source for data on macroeconomics aggregates. When you download the data from FRED, it is helpful to save in .csv format and read into R using read.csv(). Make sure you have obtained the right series of data. You may need to transform data you can download into the variables that Taylor plots. It may be helpful to merge the data into one data frame (merge() is useful for this). Finally, for the later parts of this problem, make sure you download the entire series of observations, not just the ones that Taylor plots.
+</p>
+<p>Gobal Settings</p>
+<!--begin.rcode
+##global adjustments starts 01
+rm(list=ls())
+#seed for replication
+set.seed(100)
+oldwarnval <- getOption("warn") #preserve old value
+options(warn = -1) #warnings are silent now
+##global adjustments ends 01
+end.rcode-->
+
+<!--begin.rcode
+#1 Assemble Data from FRED
+setwd("~/Downloads/Tony/Project 1/RProjectTwo/data")
+#data located here:
+#https://fred.stlouisfed.org/series/
+
+#Import data from FRED
+gce <- read.csv("GCE.csv")
+gdp <- read.csv("GDP.csv")
+unrate <- read.csv("UNRATE.csv")  
+end.rcode-->
+
+<p>
+# take a look at the data >>
+</p>
+<!--begin.rcode
+summary(gce)
+summary(gdp)
+summary(unrate)
+end.rcode-->
+
+<p>Data manipulation</p>
+<!--begin.rcode
+#combine gdp and gce data into one table
+alldata <- merge(gce, gdp, by = "DATE")
+alldata <- merge(alldata, unrate, by = "DATE")
+
+#convert DATE from factor to date
+alldata$DATE <- as.Date(alldata$DATE)
+  
+#limit data to 1990Q1 to 2010Q3
+alldata1990 <- subset(alldata, DATE >= "1990-01-01")
+alldata2010 <- subset(alldata1990, DATE <= "2010-07-01")
+
+#create new column to show government purchases as part of GDP
+alldata2010$govasgdp <- (alldata2010$GCE / alldata2010$GDP)*100
+end.rcode-->
+
+<p>Two >>>>> </p>
+<p>
+Use the data set you constructed to reproduce Taylor’s other scatter plot. That is, produce a scatter plot using only the observations from Q1 of 1990 to Q3 of 2010.
+(a) As you do this, try to format the dates as dates (look up how to do this using the as.Date() function). This will help you to produce nice looking plots within R.
+</p>
+<p>Plot Taylor's Other Graph</p>
+<!--begin.rcode fig.width=12, fig.height=12
+#plot the graph to replicate Taylor's
+plot(alldata2010$govasgdp, alldata2010$UNRATE, xlab = "Government Purchases as Percent of GDP",
+     xlim = c(17.5,21.5), ylim = c(3,11),
+     pch = 16,
+     asp=.5,
+     main = "Taylors Other Graph"
+     ,xaxs = "i"
+     ,yaxs = "i"
+     ,xaxt = "n"
+     ,ylab = "Unemployment Rate", col = "blue"
+     )
+axis(side = 1, at = 34:44/2) # x axis
+axis(side = 2, at = 3:11 # y axis
+)
+end.rcode-->
+<p>Three >>>>> </p>
+<p>
+Compare the scatter plot you obtain using the full data set to the one that Taylor reports.
+(a) For this comparison, you may want to use different plotting characters and colors, and the points() function to produce different plotting characters for different parts of the sample.
+</p>
+<p>Compare Taylor's graph to full dataset:</p>
+<!--begin.rcode fig.width=12, fig.height=12
+#compare all data (red) to 1990-2010 data (blue)
+alldata$govasgdp <- (alldata$GCE / alldata$GDP)*100
+
+plot(alldata$govasgdp, main = "Taylors Graph with full dataset"
+     , alldata$UNRATE, xlab = "Government Purchases as Percent of GDP",
+     ylab = "Unemployment Rate", col = "red", pch=16)
+points(alldata2010$govasgdp, alldata2010$UNRATE, xlab = "Government Purchases as Percent of GDP",
+     ylab = "Unemployment Rate", col = "blue", pch=16)
+end.rcode-->
+<p>OBSERVATION: This graph shows Taylor’s correlation in blue compared to the full dataset in red. This is a great visual demonstration of how the correlation of the full dataset is not represented by Taylor’s targeted time-frame</p>
+<p> </p>
+
+<p>Four >>>>> </p>
+<p>
+Analyze the statistical relationship between seasonally-adjusted unemployment and government expenditures in a way that is informative and insightful. Some questions you should consider as you perform the analysis:
+(a) Is the correlation that Taylor presents in his scatter plot stable over time? In your analysis, you could compute the correlation separately decade. In addition to calculations, your analysis should include informative plots that support your main points.
+(b) Write up your comments concisely in a typed report.
+</p>
+<p>Compare Taylor's data to other time periods</p>
+<!--begin.rcode fig.width=15, fig.height=30
+par(mfrow=c(4,2)) # Divide plots area to include multiple plots
+#Find a correlation for every decade between 1950-2018
+alldata1950 <- subset(alldata, DATE >= "1950-01-01" & DATE <= "1959-10-01")
+cor(alldata1950$UNRATE,alldata1950$govasgdp)
+plot(alldata1950$govasgdp,alldata1950$UNRATE,abline(lm(alldata1950$UNRATE ~ alldata1950$govasgdp),col="red"),xlab = "Gov't Expenditures as % of GDP",
+     ylab="Unemployment Rate", main="1950s Unemployment vs. Gov't Expenditures", pch=16,col="blue",xlim=c(16,26))
+
+#1960s
+alldata1960 <- subset(alldata, DATE >= "1960-01-01" & DATE <= "1969-10-01")
+cor(alldata1960$UNRATE,alldata1960$govasgdp)
+plot(alldata1960$govasgdp,alldata1960$UNRATE,abline(lm(alldata1960$UNRATE ~ alldata1960$govasgdp),col="red"),xlab = "Gov't Expenditures as % of GDP",
+     ylab="Unemployment Rate", main="1960s Unemployment vs. Gov't Expenditures", pch=16,col="blue",xlim=c(21,25))
+
+#1970s
+alldata1970 <- subset(alldata, DATE >= "1970-01-01" & DATE <= "1979-10-01")
+cor(alldata1970$UNRATE,alldata1970$govasgdp)
+plot(alldata1970$govasgdp,alldata1970$UNRATE,abline(lm(alldata1970$UNRATE ~ alldata1970$govasgdp),col="red"),xlab = "Gov't Expenditures as % of GDP",
+     ylab="Unemployment Rate", main="1970s Unemployment vs. Gov't Expenditures", pch=16,col="blue",xlim=c(19,24))
+#1980s
+alldata1980 <- subset(alldata, DATE >= "1980-01-01" & DATE <= "1989-10-01")
+cor(alldata1980$UNRATE,alldata1980$govasgdp)
+plot(alldata1980$govasgdp,alldata1980$UNRATE,abline(lm(alldata1980$UNRATE ~ alldata1980$govasgdp),col="red"),xlab = "Gov't Expenditures as % of GDP",
+     ylab="Unemployment Rate", main="1980s Unemployment vs. Gov't Expenditures", pch=16,col="blue",xlim=c(20,22))
+
+#1990s
+alldata1990 <- subset(alldata, DATE >= "1990-01-01" & DATE <= "1999-10-01")
+cor(alldata1990$UNRATE,alldata1990$govasgdp)
+plot(alldata1990$govasgdp,alldata1990$UNRATE,abline(lm(alldata1990$UNRATE ~ alldata1990$govasgdp),col="red"),xlab = "Gov't Expenditures as % of GDP",
+     ylab="Unemployment Rate", main="1990s Unemployment vs. Gov't Expenditures", pch=16,col="blue",xlim=c(17,22))
+
+#2000s
+alldata2000 <- subset(alldata, DATE >= "2000-01-01" & DATE <= "2009-10-01")
+cor(alldata2000$UNRATE,alldata2000$govasgdp)
+plot(alldata2000$govasgdp,alldata2000$UNRATE,abline(lm(alldata2000$UNRATE ~ alldata2000$govasgdp),col="red"),xlab = "Gov't Expenditures as % of GDP",
+     ylab="Unemployment Rate", main="2000s Unemployment vs. Gov't Expenditures", pch=16,col="blue",xlim=c(17,22))
+
+#2010s
+alldata2010 <- subset(alldata, DATE >= "2010-01-01" & DATE <= "2018-04-01")
+cor(alldata2010$UNRATE,alldata2010$govasgdp)
+plot(alldata2010$govasgdp,alldata2010$UNRATE,abline(lm(alldata2010$UNRATE ~ alldata2010$govasgdp),col="red"),xlab = "Gov't Expenditures as % of GDP",
+     ylab="Unemployment Rate", main="2010s Unemployment vs. Gov't Expenditures", pch=16,col="blue",xlim=c(17,22))
+
+end.rcode-->
+<p>OBSERVATION: The charts above clearly demonstrate that the correlation he presents in his scatter plot is misleading because the correlation between seasonally-adjusted unemployment and government expenditures varies wildly across each decade. He cherry picks the two decades that support his argument while failing to include the decades where the correlation is negative or very weak (1950s-80s). Therefore, the correlation between unemployment rates and government expenditures cannot be used as an argument by either side to justify their position. There are numerous factors that affect the unemployment rate so we cannot conclude that government expenditures has any impact on the unemployment rate.</p>
+
+<p> </p>
+<p>Five >>>>> </p>
+<p>
+Write code – likely using for loops – to simulate the process of “cherry picking” in Wolfers’ terminology, and use it to evaluate the seriousness of this part of the criticism. Some suggestions and refinements to guide your coding journey.
+(a) The code should generate two uncorrelated variables x and y (e.g., from a Normal distri- bution) over a time series of 256 quarters
+(b) Using these variables, use R to compute the correlation between x and y over the last 60 quarters, over the last 61 quarters, over the last 62 quarters.... all the way until... over the last 256 quarters (the full sample).
+i. A researcher who is cherry picking the begin date will then select the lowest corre- lation. Have your code do this and store the maximum “cherry picked” correlation, but for comparison, you should also store the correlation over the entire sample (“not cherry picked”).
+(c) Repeatthisprocessfor1000possible“cherrypicked”correlationsand“notcherrypicked” correlations. Store the output.
+i. Are the cherry picked correlations different than the not cherry picked correlations? Use both visual (plots to compare) and numerical evidence (t-tests).
+ii. Using the simulated cherry picked sample of correlations, conduct a t-test to evaluate whether Taylor’s computed negative correlation could be generated from this cherry picking process with zero underlying correlation.
+</p>
+<p>Create random variables and divide into full and cherry-picked sets of data</p>
+
+<!--begin.rcode fig.width=12, fig.height=12
+#code generates two uncorrelated variables x and y (from Normal distribution) over a time series of 256 quarters
+x <- rnorm(256, mean=0, sd=1)
+y <- rnorm(256, mean=0, sd=1)
+xycor <- cor(x,y)
+hist(y)
+
+datasetxy <- rep(NA, 100)
+for (i in 1:256){
+  x <- rnorm(256, mean=0, sd=1)
+  y <- rnorm(256, mean=0, sd=1)
+  datasetxy[i]= cor(x,y)
+}
+end.rcode-->
+<p>Rough view of the data</p>
+<!--begin.rcode
+#optional view of data
+summary(datasetxy)
+head(datasetxy)
+end.rcode-->
+
+<p>plot these correlations against time-frame 1954 - 2018</p>
+<!--begin.rcode fig.width=12, fig.height=12
+xycordf.data <- data.frame(alldata$DATE[27:282], datasetxy)
+head(xycordf.data)
+plot(xycordf.data$alldata.DATE.27.282., datasetxy)
+end.rcode-->
+
+<p>find correlation over last 60 quarters</p>
+<!--begin.rcode
+xy60 <- cor(x[196:256], y[196:256])
+
+xyfulllist <- rep(NA, 196)
+placeholderx <- 0
+placeholdery <- 0
+for (i in 1:196) {
+  placeholderx <- 197 - i 
+  placeholdery <- 197 - i
+  xyfulllist[i] <- cor(x[placeholderx:256], y[placeholdery:256])
+}
+
+#correlation over full plot = 0.03561521
+#max correlation within sample = 0.04351795 with 121 observations
+cor(x,y)
+max(xyfulllist)
+
+whichset <- c(61:256)
+xyfulldf <- data.frame(whichset, xyfulllist)
+sortedxy <- xyfulldf[order(xyfulllist),] 
+#last position of this sorted dataframe willshow which set of data has the highest correlation
+end.rcode-->
+
+<!--begin.rcode
+orig1000 <- NA
+cherr1000 <- NA
+
+for (i in 1:1000){
+  
+  xyfulllist1 <- NA
+  
+  placeholderx1 <- 0
+  placeholdery1 <- 0
+  
+  x2 <- rnorm(256, mean=0, sd=1)
+  y2 <- rnorm(256, mean=0, sd=1)
+  
+  orig1000[i] <- cor(x2,y2)
+  
+  for (k in 1:196) {
+    x1 <- rnorm(256, mean=0, sd=1)
+    y1 <- rnorm(256, mean=0, sd=1)
+    
+    placeholderx1 <- 197 - k 
+    placeholdery1<- 197 - k
+    xyfulllist1[k] <- cor(x1[placeholderx1:256], y1[placeholdery1:256])
+  }
+  cherr1000[i] <- max(xyfulllist1)
+}
+end.rcode-->
+
+<p>plot cherry picked vs. original
+</p>
+<!--begin.rcode fig.width=12, fig.height=12
+hist(orig1000, col=rgb(1,0,0,0.5),xlim=c(-.3,.5), ylim=c(0,290), main="Original Correlation vs. Cherry-Picked")
+hist(cherr1000, col=rgb(0,0,1,0.5), add=T)
+box()
+end.rcode-->
+<p> t test to compare two datasets</p>
+<!--begin.rcode
+t.test(cherr1000, orig1000)
+#t = 102.26, df = 1847.5, p-value < 2.2e-16
+#this p-value indicates that these two datasets are indeed statistically significant
+#the high positive t value indicates that the cherry picked data pushes the mean far in the positive direction
+end.rcode-->
+
+<p>
+#Taylor's correlation (1990-2010) = 0.8242042
+</p>
+<!--begin.rcode
+#compare cherry-picked data to Taylor's correlation
+t.test(cherr1000, mu=0.8242042)
+
+#t = -378.73, df = 999, p-value < 2.2e-16
+# The p-value indicates there is a statistically significant difference between the cherry-picked data and Taylor's
+# This indicates that it is very unlikely Taylor cherry-picked his data and he reported a valid correlation
+end.rcode-->
+<p> OBSERVATION::
+After iterating through the full dataset of correlations between random variables and comparing it to the cherry-picked data, it is clear how much of an impact this technique can have on the final results. The full data is centered around a mean of 0 while the cherry-picked data is centered around a mean of .25 and has very little overlap with the original data.
+</p>
+<p>
+According to the t-test between the full data set and cherry-picked data, the p-value indicates the two datasets are statistically significant at the 5% level. A high t-value of 102 indicates that the cherry-picked sample is 102 standard errors above the full dataset mean.
+</p>
+<p>
+According to the t-test between the cherry-picked data and Taylor’s correlation of 0.8242042, the p-value indicates these results are statistically significant and the t-value of -382 indicates that the cherry-picked data is 382 standard errors below Taylor’s strong correlation.
+</p>
+<p>
+CONCLUSION: After running a cherry-picking data experiment on two purely random variables, we must reject our null hypothesis that Taylor’s data is cherry-picked using a similar method. The odds of finding such a strong correlation are just too low to be reasonably plausible. A correlation between his original data points certainly exists to some extent.
+</p>
+<p>
+However, just because we are ruling out this version of cherry-picking data in Taylor’s analysis does not mean we can rule out other forms of bias. Taylor chose a convenient time period to demonstrate his point without explaining that this small sample did not represent the correlation over time for all of the data available. Indeed, economics is a complex issue involving many moving pieces such as action taken by the federal reserve, the politics of the administration currently in power, and the overall strength of the economy at the time which makes it hard to conclude a direct sole correlation between two variables, let alone at such a powerful magnitude.
+</p>
+<!--begin.rcode
+###global adjustments start 02
+options(warn = oldwarnval) #reset the warning message
+###global adjustments end 02
+end.rcode-->
+
+<p>Thank you!!</p>
+</body>
+</html>
